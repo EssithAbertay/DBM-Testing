@@ -1,11 +1,15 @@
 #include <iostream>
 #include <vector>
-
+#include <random>
 
 const int x_size = 10;
 const int y_size = 10;
 
 const int num_of_iterations = 30;
+
+const int eta = 1;
+
+const int LIGHTNING_STEPS = 10;
 
 float potential_grid[y_size][x_size] =
 {
@@ -56,7 +60,7 @@ int starting_grid[y_size][x_size] =
 struct candidate_cell
 {
 	int x, y;
-	float potential;
+	float potential, probability;
 };
 
 void initialiseGrid()
@@ -106,6 +110,45 @@ void displayGrid()
 	std::cout << std::endl << "---------------------" << std::endl << std::endl;
 }
 
+void displayGridColour()
+{
+	for (int i = 0; i < y_size; i++)
+	{
+		for (int j = 0; j < x_size; j++)
+		{
+			switch (starting_grid[i][j])
+			{
+			case 0: // if air in starting we check if its still air or "lightning"
+				if (potential_grid[i][j] != 0)
+				{
+					std::cout << "\033[36;46m" << "0" << "\033[0m"; // yellow
+				}
+				else
+				{
+					std::cout << "\033[33;43m" << "0" << "\033[0m"; // blue
+				}
+				break;
+			case 1: // ground
+				std::cout << "\033[32;42m" << "0" << "\033[0m"; // green
+				break;
+			case 2: // starting charge
+				std::cout <<  "\033[31;41m" << "0" << "\033[0m"; // red
+				break;
+			case 3: //boundary
+				std::cout << "\033[37;47m" << "0" << "\033[0m"; // white
+				break;
+			default:
+				std::cout << "\033[0m" << "0" << "\033[0m"; // default
+				break;
+			}
+
+
+	
+		}
+		std::cout << std::endl;
+	}
+}
+
 float calculateLaplace(int x, int y)
 {
 	float left = potential_grid[y][x - 1];
@@ -143,8 +186,6 @@ void calculateGridStep()
 		}
 	}
 }
-
-
 
 void selectLightningCell()
 {
@@ -205,22 +246,58 @@ void selectLightningCell()
 		}
 	}
 
-	candidate_cell largest_candidate = candidates[0];
 
-	for (auto x : candidates)
+	// formula for probability
+	// https://onlinelibrary.wiley.com/cms/asset/6dcd580c-06ae-421c-acf7-f5449d06a5e4/cav1760-math-0002.png
+
+	float total_potential = 0;
+
+	for (int i = 0; i < candidates.size(); i++)
 	{
-		if (x.potential > largest_candidate.potential)
-		{
-			largest_candidate = x;
-		}
-
-		std::cout << "X:" << x.x << "| Y:" << x.y << "| Potential:" << x.potential << std::endl;;
+		total_potential += pow(candidates[i].potential, eta);
 	}
 
-	potential_grid[largest_candidate.y][largest_candidate.x] = 0; // the largest cell becomes a lightning spot
-	potential_grid_updates[largest_candidate.y][largest_candidate.x] = 0; 
+	for (auto & x : candidates)
+	{
+		x.probability = (pow(x.potential,eta)) / total_potential;
+
+		std::cout << "Probability: " << x.probability << " | Potential: " << x.potential << " | X: " << x.x << " | Y: " << x.y << std::endl;
+	}
+
+	// taken from cpp reference  https://en.cppreference.com/w/cpp/numeric/random/generate_canonical.html
+	  
+
+	// baddddd
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	float rnd = std::generate_canonical<float, 10>(gen);
+
+	int chosen_candidate = 0;
+
+	for (int i = 0; i < candidates.size(); i++) {
+		if (rnd < candidates[i].probability)
+		{
+			chosen_candidate = i;
+			break;
+		}
+		rnd -= candidates[i].probability;
+	}
+
+	candidate_cell chosen = candidates[chosen_candidate];
+
+	potential_grid[chosen.y][chosen.x] = 0;
+	potential_grid_updates[chosen.y][chosen.x] = 0;
 }
 
+void performLightningStep()
+{
+	for (int i = 0; i < num_of_iterations; i++)
+	{
+		calculateGridStep();
+	}
+	selectLightningCell();
+}
 
 int main()
 {
@@ -230,23 +307,12 @@ int main()
 
 	displayGrid();
 
-	for (int i = 0; i < num_of_iterations; i++)
+	for (int i = 0; i < LIGHTNING_STEPS; i++)
 	{
-		calculateGridStep();
+		performLightningStep();
 	}
 
-	displayGrid();
+	displayGridColour();
 
-	selectLightningCell();
-
-	for (int i = 0; i < num_of_iterations; i++)
-	{
-
-		calculateGridStep();
-	}
-
-	displayGrid();
-	selectLightningCell();
-	displayGrid();
 	return 0;
 }
