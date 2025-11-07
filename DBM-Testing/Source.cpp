@@ -1,3 +1,8 @@
+// v0.1.1 of honours
+// hardset grid size 10x10
+// hardset laplace gradient steps
+// hardset number of lightning steps to do
+
 #include <iostream>
 #include <vector>
 #include <random>
@@ -6,10 +11,10 @@ const int x_size = 10;
 const int y_size = 10;
 
 const int num_of_iterations = 30;
-
-const int eta = 1;
-
 const int LIGHTNING_STEPS = 10;
+
+int eta = 1;
+
 
 float potential_grid[y_size][x_size] =
 {
@@ -228,7 +233,7 @@ void selectLightningCell()
 
 						if (potential_grid[i][j] == 1) // check if candidate ground is next to lightning
 						{
-							std::cout << "Candidate was ground!" << std::endl;
+							//std::cout << "Candidate was ground!" << std::endl;
 						}
 
 						candidate_cell temp;
@@ -261,12 +266,11 @@ void selectLightningCell()
 	{
 		x.probability = (pow(x.potential,eta)) / total_potential;
 
-		std::cout << "Probability: " << x.probability << " | Potential: " << x.potential << " | X: " << x.x << " | Y: " << x.y << std::endl;
+		//std::cout << "Probability: " << x.probability << " | Potential: " << x.potential << " | X: " << x.x << " | Y: " << x.y << std::endl;
 	}
 
 	// taken from cpp reference  https://en.cppreference.com/w/cpp/numeric/random/generate_canonical.html
 	  
-
 	// baddddd
 
 	std::random_device rd;
@@ -301,18 +305,22 @@ void performLightningStep()
 
 int main()
 {
-	initialiseGrid();
-
-	std::cout << "Initial Grid" << std::endl;
-
-	displayGrid();
-
-	for (int i = 0; i < LIGHTNING_STEPS; i++)
+	for (int i = 1; i < 5; i++)
 	{
-		performLightningStep();
+		eta = i;
+
+		std::cout << "Sim and Eta =  " << i << std::endl;
+
+		initialiseGrid();
+
+		for (int i = 0; i < LIGHTNING_STEPS; i++)
+		{
+			performLightningStep();
+		}
+
+		displayGridColour();
+
+		std::cout << "--------------------------" << std::endl;
 	}
-
-	displayGridColour();
-
 	return 0;
 }
