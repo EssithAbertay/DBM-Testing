@@ -170,9 +170,9 @@ float calculateLaplace(int x, int y)
 
 bool calculateGridStep()
 { 
-	bool is_within_tolerance = true;
+	bool is_within_tolerance = false;
 
-	const float tolerance = 0.05;
+	const float tolerance = 0.005;
 
 	for (int i = 0; i < y_size; i++)
 	{
@@ -191,9 +191,9 @@ bool calculateGridStep()
 
 			//add tolerance check
 			
-			if (abs(old_value - new_value) < tolerance)
+			if (abs(old_value - new_value) >= tolerance)
 			{
-				is_within_tolerance = false;
+				is_within_tolerance = true;
 			}
 		}
 	}
@@ -305,6 +305,23 @@ void selectLightningCell()
 	potential_grid_updates[chosen.y][chosen.x] = 0;
 }
 
+void resetPotentialGrid()
+{
+	for (int i = 0; i < y_size; i++)
+	{
+		for (int j = 0; j < x_size; j++)
+		{
+			if (potential_grid[i][j] == 0 || potential_grid[i][j] == 1)
+			{
+				continue;
+			}
+
+			potential_grid[i][j] = 0.5;
+		}
+		
+	}
+}
+
 void performLightningStep()
 {
 	bool is_within_tolerance = true;
@@ -315,6 +332,7 @@ void performLightningStep()
 	}
 
     selectLightningCell();
+	resetPotentialGrid();
 }
 
 int main()
