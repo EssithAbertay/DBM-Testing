@@ -1,6 +1,5 @@
 // v0.1.1 of honours
 // hardset grid size 10x10
-// hardset laplace gradient steps
 // hardset number of lightning steps to do
 
 #include <iostream>
