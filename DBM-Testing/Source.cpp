@@ -10,8 +10,8 @@
 const int x_size = 10;
 const int y_size = 10;
 
-const int num_of_iterations = 30;
 const int LIGHTNING_STEPS = 10;
+const int max_gradient_loops = 50;
 
 int eta = 1;
 
@@ -168,8 +168,12 @@ float calculateLaplace(int x, int y)
 	return average;
 }
 
-void calculateGridStep()
+bool calculateGridStep()
 { 
+	bool is_within_tolerance = true;
+
+	const float tolerance = 0.05;
+
 	for (int i = 0; i < y_size; i++)
 	{
 		for (int j = 0; j < x_size; j++)
@@ -179,17 +183,24 @@ void calculateGridStep()
 				continue;
 			}
 
-			potential_grid_updates[i][j] = calculateLaplace(j, i);
+			float new_value  = calculateLaplace(j, i);
+
+			float old_value = potential_grid[i][j];
+
+			potential_grid_updates[i][j] = new_value;
+
+			//add tolerance check
+			
+			if (abs(old_value - new_value) < tolerance)
+			{
+				is_within_tolerance = false;
+			}
 		}
 	}
 
-	for (int i = 0; i < y_size; i++)
-	{
-		for (int j = 0; j < x_size; j++)
-		{
-			potential_grid[i][j] = potential_grid_updates[i][j];
-		}
-	}
+	std::swap(potential_grid, potential_grid_updates);
+
+	return is_within_tolerance;
 }
 
 void selectLightningCell()
@@ -296,11 +307,14 @@ void selectLightningCell()
 
 void performLightningStep()
 {
-	for (int i = 0; i < num_of_iterations; i++)
+	bool is_within_tolerance = true;
+
+	while(is_within_tolerance)
 	{
-		calculateGridStep();
+		is_within_tolerance = calculateGridStep();
 	}
-	selectLightningCell();
+
+    selectLightningCell();
 }
 
 int main()
@@ -319,6 +333,7 @@ int main()
 		}
 
 		displayGridColour();
+		
 
 		std::cout << "--------------------------" << std::endl;
 	}
