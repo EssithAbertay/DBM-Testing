@@ -1,19 +1,19 @@
-// v0.1.1 of honours
-// hardset grid size 10x10
-// hardset number of lightning steps to do
 
 #include <iostream>
 #include <vector>
 #include <random>
 
+#include "raylib.h"
+
 const int x_size = 10;
 const int y_size = 10;
 
 const int LIGHTNING_STEPS = 10;
-const int max_gradient_loops = 50;
+const int MAX_GRADIENT_LAPLACE_LOOPS = 50;
 
 int eta = 1;
 
+std::vector<Vector2> lightning_points;
 
 float potential_grid[y_size][x_size] =
 {
@@ -207,6 +207,8 @@ void selectLightningCell()
 	std::vector<candidate_cell> candidates;
 
 	// get all candidate cells
+						bool is_ground_candidate_found = false;
+
 
 	for (int i = 0; i < y_size; i++) 
 	{
@@ -223,27 +225,18 @@ void selectLightningCell()
 			{
 				for (int y = -1; y <= 1; y++)
 				{
-					if (i + x >= x_size || j + y >= y_size) // if checking cells that are out of bounds skip
-					{
-						continue;
-					}
-
-					if (x == 0 && y == 0) // skip middle cell
-					{
-						continue;
-					}
-
-					if (starting_grid[i + x][j + y] == 3)
-					{
-						continue;
-					}
+					if (i + x >= x_size || j + y >= y_size) continue;  // if checking cells that are out of bounds skip
+					if (x == 0 && y == 0) continue;// skip middle cell
+					if (starting_grid[i + x][j + y] == 3) continue; //skip boundaries
 
 					if (potential_grid[i + x][j + y] == 0) // if a surrounding cell is lightning then this is a candidate, might be picking up boundaries at the moment.
 					{
-
+	
 						if (potential_grid[i][j] == 1) // check if candidate ground is next to lightning
 						{
-							//std::cout << "Candidate was ground!" << std::endl;
+							std::cout << "Candidate was ground!" << std::endl;
+							is_ground_candidate_found = true;
+
 						}
 
 						candidate_cell temp;
@@ -252,11 +245,20 @@ void selectLightningCell()
 						temp.x = j;
 						temp.y = i;
 
+
+						if (is_ground_candidate_found) // TODO: FINISH GRABBING GROUND!!!
+						{
+							candidates.clear();
+							candidates.push_back(temp);
+							break;
+						}
+
 						candidates.push_back(temp);
 
 						x = 2; y = 2; // skip out the check cause we knw it's a candidate, this feels evil
 					}
 				}
+
 			}
 		}
 	}
@@ -300,6 +302,9 @@ void selectLightningCell()
 
 	candidate_cell chosen = candidates[chosen_candidate];
 
+
+	lightning_points.push_back(Vector2{ float(chosen.x), float(chosen.y) } );
+
 	potential_grid[chosen.y][chosen.x] = 0;
 	potential_grid_updates[chosen.y][chosen.x] = 0;
 }
@@ -336,23 +341,40 @@ void performLightningStep()
 
 int main()
 {
-	for (int i = 1; i < 5; i++)
+
+	eta = 3;
+
+	initialiseGrid();
+
+	for (int i = 0; i < LIGHTNING_STEPS; i++)
 	{
-		eta = i;
+		performLightningStep();
+	}
 
-		std::cout << "Sim and Eta =  " << i << std::endl;
+	const int screenWidth = 800;
+	const int screenHeight = 450;
 
-		initialiseGrid();
+	InitWindow(screenWidth, screenHeight, "window");
 
-		for (int i = 0; i < LIGHTNING_STEPS; i++)
+	SetTargetFPS(60);
+
+
+	while (!WindowShouldClose())
+	{
+		BeginDrawing();
+
+		ClearBackground(BLACK);
+
+		for (int i = 1; i < lightning_points.size(); i++)
 		{
-			performLightningStep();
+			DrawLine(lightning_points[i - 1].x * 20, lightning_points[i - 1].y * 20, lightning_points[i].x * 20, lightning_points[i].y * 20, YELLOW);
 		}
 
-		displayGridColour();
-		
+		EndDrawing();
 
-		std::cout << "--------------------------" << std::endl;
 	}
+
+	CloseWindow();    
+
 	return 0;
 }
