@@ -439,14 +439,10 @@ int main()
 		// house body
 		DrawRectangleLines(((x_size - 3) * segment_size) + segment_size/3, ((y_size) * segment_size) - segment_size/3, segment_size / 3, segment_size / 3, RED);
 
-		// house door
+		// house Window
 
-		DrawRectangleLines(((x_size - 3) * segment_size) + segment_size / 3, ((y_size)*segment_size) - segment_size / 3 + segment_size / 9 , segment_size / 9, segment_size / 3 /2, DARKGREEN);
+		DrawRectangleLines(((x_size - 3) * segment_size) + segment_size / 3, ((y_size)*segment_size) - segment_size / 3 + segment_size / 9 , segment_size / 9, segment_size / 3 /2, BLUE);
 
-
-		//house window
-
-		//DrawRectangleLines(((x_size - 3) * segment_size) + segment_size / 3, ((y_size)*segment_size) - segment_size / 3, segment_size / 3, segment_size / 3, BLUE);
 
 
 		Vector2 roof1; roof1.x = ((x_size - 3) * segment_size) + segment_size / 3 - segment_size/6; roof1.y = ((y_size) * segment_size) - segment_size / 3;
