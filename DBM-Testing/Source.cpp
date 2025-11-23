@@ -11,9 +11,12 @@ const int y_size = 10;
 const int LIGHTNING_STEPS = 10;
 const int MAX_GRADIENT_LAPLACE_LOOPS = 50;
 
+bool reached_edge = false;
+
 int eta = 1;
 
-std::vector<Vector2> lightning_points;
+//std::vector<Vector2> lightning_points;
+
 
 float potential_grid[y_size][x_size] =
 {
@@ -63,17 +66,28 @@ int starting_grid[y_size][x_size] =
 
 struct candidate_cell
 {
-	int x, y;
+	int x, y, parent_x,parent_y;
 	float potential, probability;
 };
 
+struct lightning_cell
+{
+	lightning_cell(int x, int y, int px, int py) : x(x), y(y), parent_x(px), parent_y(py){}
+
+	int x, y, parent_x, parent_y;
+};
+
+std::vector<lightning_cell> lightning_points;
+
+
 void initialiseGrid()
 {
+	lightning_points.clear();
+	reached_edge = false;
 	for (int i = 0; i < y_size; i++)
 	{
 		for (int j = 0; j < x_size; j++)
 		{
-
 			switch (starting_grid[i][j])
 			{
 			case 0:
@@ -207,7 +221,7 @@ void selectLightningCell()
 	std::vector<candidate_cell> candidates;
 
 	// get all candidate cells
-						bool is_ground_candidate_found = false;
+	bool is_ground_candidate_found = false;
 
 
 	for (int i = 0; i < y_size; i++) 
@@ -236,7 +250,7 @@ void selectLightningCell()
 						{
 							std::cout << "Candidate was ground!" << std::endl;
 							is_ground_candidate_found = true;
-
+							reached_edge = true;
 						}
 
 						candidate_cell temp;
@@ -244,7 +258,8 @@ void selectLightningCell()
 						temp.potential = potential_grid[i][j];
 						temp.x = j;
 						temp.y = i;
-
+						temp.parent_x = j + y;
+						temp.parent_y = i + x;
 
 						if (is_ground_candidate_found) // TODO: FINISH GRABBING GROUND!!!
 						{
@@ -303,7 +318,7 @@ void selectLightningCell()
 	candidate_cell chosen = candidates[chosen_candidate];
 
 
-	lightning_points.push_back(Vector2{ float(chosen.x), float(chosen.y) } );
+	lightning_points.push_back(lightning_cell(chosen.x, chosen.y, chosen.parent_x,chosen.parent_y));
 
 	potential_grid[chosen.y][chosen.x] = 0;
 	potential_grid_updates[chosen.y][chosen.x] = 0;
@@ -339,17 +354,31 @@ void performLightningStep()
 	resetPotentialGrid();
 }
 
-int main()
+
+void regen_lightning()
 {
-
-	eta = 3;
-
 	initialiseGrid();
 
-	for (int i = 0; i < LIGHTNING_STEPS; i++)
+	//for (int i = 0; i < LIGHTNING_STEPS; i++)
+	//{
+	//	performLightningStep();
+	//}
+
+	while (!reached_edge)
 	{
 		performLightningStep();
 	}
+
+	displayGridColour();
+
+}
+
+int main()
+{
+
+	eta = 1;
+
+	regen_lightning();
 
 	const int screenWidth = 800;
 	const int screenHeight = 450;
@@ -358,17 +387,53 @@ int main()
 
 	SetTargetFPS(60);
 
-
 	while (!WindowShouldClose())
 	{
+
+		// check for num input, used to regen lightning and set eta
+		
+		if (IsKeyPressed(KEY_ONE)) { eta = 1; regen_lightning(); }
+		if (IsKeyPressed(KEY_TWO)){ eta = 2; regen_lightning();}
+		if (IsKeyPressed(KEY_THREE)){ eta = 3; regen_lightning();}
+		if (IsKeyPressed(KEY_FOUR)) {eta = 4; regen_lightning(); }
+		if (IsKeyPressed(KEY_FIVE)){ eta = 5; regen_lightning(); }
+
 		BeginDrawing();
 
 		ClearBackground(BLACK);
 
-		for (int i = 1; i < lightning_points.size(); i++)
+
+		int segment_size = 30;
+
+		for (int i = 0; i < x_size; i++)
 		{
-			DrawLine(lightning_points[i - 1].x * 20, lightning_points[i - 1].y * 20, lightning_points[i].x * 20, lightning_points[i].y * 20, YELLOW);
+			for (int j = 0; j < y_size; j++)
+			{
+				DrawRectangleLines(i * segment_size, j * segment_size, segment_size, segment_size, BLUE);
+			}
+
+			
+			DrawText(TextFormat("%i", i), x_size*segment_size, i * segment_size, 20, WHITE);
+
 		}
+
+		for (int i = 0; i < x_size; i++)
+		{
+			DrawText(TextFormat("%i", i), i * segment_size, y_size * segment_size, 20, WHITE);
+		}
+
+		DrawText(TextFormat("Lightning Generation DBM Test"),0, (y_size + 1) * segment_size, 40, WHITE);
+
+		DrawText(TextFormat("Eta: %i", eta), 0, (y_size + 3) * segment_size, 20, WHITE);
+
+		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, (y_size + 4) * segment_size, 20, WHITE);
+
+
+		for (int i = 0; i < lightning_points.size(); i++)
+		{
+			DrawLine(lightning_points[i].parent_x * segment_size, lightning_points[i].parent_y * segment_size, lightning_points[i].x * segment_size, lightning_points[i].y * segment_size, YELLOW);
+		}
+
 
 		EndDrawing();
 
