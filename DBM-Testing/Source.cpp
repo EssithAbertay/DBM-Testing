@@ -383,7 +383,7 @@ int main()
 	const int screenWidth = 800;
 	const int screenHeight = 450;
 
-	InitWindow(screenWidth, screenHeight, "window");
+	InitWindow(screenWidth, screenHeight, "DBM Testing");
 
 	SetTargetFPS(60);
 
@@ -405,21 +405,28 @@ int main()
 
 		int segment_size = 30;
 
-		for (int i = 0; i < x_size; i++)
+		for (int i = 0; i <= x_size -1; i++)
 		{
-			for (int j = 0; j < y_size; j++)
+			for (int j = 0; j <= y_size-1; j++)
 			{
-				DrawRectangleLines(i * segment_size, j * segment_size, segment_size, segment_size, BLUE);
+				Color square = BLUE;
+
+				if (j == y_size-1)
+				{
+					square = GREEN;
+				}
+
+				DrawRectangleLines(i * segment_size, j * segment_size, segment_size, segment_size, square);
 			}
 
 			
-			DrawText(TextFormat("%i", i), x_size*segment_size, i * segment_size, 20, WHITE);
+			DrawText(TextFormat("%i", i+1), x_size*segment_size, i * segment_size, 20, WHITE);
 
 		}
 
-		for (int i = 0; i < x_size; i++)
+		for (int i = 0; i <= x_size-1; i++)
 		{
-			DrawText(TextFormat("%i", i), i * segment_size, y_size * segment_size, 20, WHITE);
+			DrawText(TextFormat("%i", i+1), i * segment_size, y_size * segment_size, 20, WHITE);
 		}
 
 		DrawText(TextFormat("Lightning Generation DBM Test"),0, (y_size + 1) * segment_size, 40, WHITE);
