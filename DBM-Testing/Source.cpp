@@ -380,8 +380,8 @@ int main()
 
 	regen_lightning();
 
-	const int screenWidth = 800;
-	const int screenHeight = 450;
+	const int screenWidth = 1200;
+	const int screenHeight = 900;
 
 	InitWindow(screenWidth, screenHeight, "DBM Testing");
 
@@ -402,8 +402,11 @@ int main()
 
 		ClearBackground(BLACK);
 
+		int segment_size = 50;
 
-		int segment_size = 30;
+		int y_offset = segment_size;
+
+		// background squares
 
 		for (int i = 0; i <= x_size -1; i++)
 		{
@@ -416,29 +419,58 @@ int main()
 					square = GREEN;
 				}
 
-				DrawRectangleLines(i * segment_size, j * segment_size, segment_size, segment_size, square);
+				DrawRectangleLines(i * segment_size, (j * segment_size) + y_offset , segment_size, segment_size, square);
+
+				DrawCircle(i * segment_size + (segment_size / 2), segment_size / 2, (segment_size / 2) + (segment_size/4), GRAY);
 			}
 
 			
-			DrawText(TextFormat("%i", i+1), x_size*segment_size, i * segment_size, 20, WHITE);
+			DrawText(TextFormat("%i", i+1), x_size*segment_size, (i * segment_size) + y_offset, 20, WHITE);
 
 		}
 
 		for (int i = 0; i <= x_size-1; i++)
 		{
-			DrawText(TextFormat("%i", i+1), i * segment_size, y_size * segment_size, 20, WHITE);
+			DrawText(TextFormat("%i", i+1), i * segment_size,(y_size * segment_size) + y_offset, 20, WHITE);
 		}
 
-		DrawText(TextFormat("Lightning Generation DBM Test"),0, (y_size + 1) * segment_size, 40, WHITE);
+		// little house
 
-		DrawText(TextFormat("Eta: %i", eta), 0, (y_size + 3) * segment_size, 20, WHITE);
+		// house body
+		DrawRectangleLines(((x_size - 3) * segment_size) + segment_size/3, ((y_size) * segment_size) - segment_size/3, segment_size / 3, segment_size / 3, RED);
 
-		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, (y_size + 4) * segment_size, 20, WHITE);
+		// house door
+
+		DrawRectangleLines(((x_size - 3) * segment_size) + segment_size / 3, ((y_size)*segment_size) - segment_size / 3 + segment_size / 9 , segment_size / 9, segment_size / 3 /2, DARKGREEN);
+
+
+		//house window
+
+		//DrawRectangleLines(((x_size - 3) * segment_size) + segment_size / 3, ((y_size)*segment_size) - segment_size / 3, segment_size / 3, segment_size / 3, BLUE);
+
+
+		Vector2 roof1; roof1.x = ((x_size - 3) * segment_size) + segment_size / 3 - segment_size/6; roof1.y = ((y_size) * segment_size) - segment_size / 3;
+
+		Vector2 roof2; roof2.x = ((x_size - 3) * segment_size) + segment_size / 3 + segment_size / 3 + segment_size / 6; roof2.y = ((y_size) * segment_size) - segment_size / 3;
+
+		Vector2 roof3; roof3.x = ((x_size - 3) * segment_size) + segment_size / 3 + segment_size / 6; roof3.y = ((y_size) * segment_size) - segment_size/2;
+
+		// house roof
+		DrawTriangleLines(roof1, roof2, roof3, RED);
+
+
+		// info text
+
+		DrawText(TextFormat("Lightning Generation DBM Test"),0, ((y_size + 1) * segment_size) + y_offset, 40, WHITE);
+
+		DrawText(TextFormat("Eta: %i", eta), 0, ((y_size + 3) * segment_size) + y_offset, 20, WHITE);
+
+		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, ((y_size + 4) * segment_size) + y_offset, 20, WHITE);
 
 
 		for (int i = 0; i < lightning_points.size(); i++)
 		{
-			DrawLine(lightning_points[i].parent_x * segment_size, lightning_points[i].parent_y * segment_size, lightning_points[i].x * segment_size, lightning_points[i].y * segment_size, YELLOW);
+			DrawLine(lightning_points[i].parent_x * segment_size, (lightning_points[i].parent_y * segment_size) + y_offset, lightning_points[i].x * segment_size, (lightning_points[i].y * segment_size) + y_offset, YELLOW);
 		}
 
 
