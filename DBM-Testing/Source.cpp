@@ -5,8 +5,10 @@
 
 #include "raylib.h"
 
-const int x_size = 10;
-const int y_size = 10;
+ int x_size = 10;
+ int y_size = 10;
+
+int test_x = 10;
 
 const int LIGHTNING_STEPS = 10;
 const int MAX_GRADIENT_LAPLACE_LOOPS = 50;
@@ -18,38 +20,38 @@ int eta = 1;
 //std::vector<Vector2> lightning_points;
 
 
-float potential_grid[y_size][x_size] =
-{
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-};
-
-float potential_grid_updates[y_size][x_size] =
-{
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,0,0,0,
-};
+//float potential_grid[y_size][x_size] =
+//{
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//};
+//
+//float potential_grid_updates[y_size][x_size] =
+//{
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//	0,0,0,0,0,0,0,0,0,0,
+//};
 
 // 0 for air
 // 1 for ground
 // 2 for starting charge
 // 3 for boundary
 
-int starting_grid[y_size][x_size] =
+int starting_grid[10][10] =
 {
 	3,3,3,3,2,3,3,3,3,3,
 	3,0,0,0,0,0,0,0,0,3,
@@ -79,38 +81,91 @@ struct lightning_cell
 
 std::vector<lightning_cell> lightning_points;
 
+std::vector<std::vector<float>> potentials;
+
+std::vector<std::vector<float>> new_potentials;
+
+std::vector<std::vector<int>> starting;
+
+void createStartingGrid()
+{
+	starting.clear();
+
+	for (int i = 0; i < y_size; i++)
+	{
+		std::vector<int> row;
+
+		for (int j = 0; j < x_size; j++)
+		{
+			if (i == 0)
+			{
+				row.push_back(3);
+			}
+			else if (i == y_size - 1)
+			{
+				row.push_back(1);
+			}
+			else if (j == 0 || j == x_size - 1)
+			{
+				row.push_back(3);
+			}
+			else
+			{
+				row.push_back(0);
+			}
+		}
+
+		starting.push_back(row);
+	}
+
+	starting[0][4] = 2;
+}
 
 void initialiseGrid()
 {
 	lightning_points.clear();
+	potentials.clear();
+	new_potentials.clear();
+
+	createStartingGrid();
+
 	reached_edge = false;
 	for (int i = 0; i < y_size; i++)
 	{
+		std::vector<float> row;
+
 		for (int j = 0; j < x_size; j++)
 		{
-			switch (starting_grid[i][j])
+			switch (starting[i][j])
 			{
 			case 0:
-				potential_grid[i][j] = 0.5;
-				potential_grid_updates[i][j] = 0.5;
+				row.push_back(0.5);
+				//potential_grid[i][j] = 0.5;
+			//	potential_grid_updates[i][j] = 0.5;
 				break;
 			case 1:
-				potential_grid[i][j] = 1;
-				potential_grid_updates[i][j] = 1;
+				row.push_back(1);
+			////	potential_grid[i][j] = 1;
+			//	potential_grid_updates[i][j] = 1;
 				break;
 			case 2:
-				potential_grid[i][j] = 0;
-				potential_grid_updates[i][j] = 0;
+				row.push_back(0);
+			//	potential_grid[i][j] = 0;
+			//	potential_grid_updates[i][j] = 0;
 				break;
 			case 3:
-				potential_grid[i][j] = 0;
-				potential_grid_updates[i][j] = 0;
+				row.push_back(0);
+			//	potential_grid[i][j] = 0;
+			//	potential_grid_updates[i][j] = 0;
 				break;
 			default:
 				break;
 			}
 
 		}
+
+		potentials.push_back(row);
+		new_potentials.push_back(row);
 	}
 }
 
@@ -120,7 +175,7 @@ void displayGrid()
 	{
 		for (int j = 0; j < x_size; j++)
 		{
-			std::cout << potential_grid[i][j] << ",";
+		//	std::cout << potential_grid[i][j] << ",";
 		}
 		std::cout << std::endl;
 	}
@@ -134,31 +189,31 @@ void displayGridColour()
 	{
 		for (int j = 0; j < x_size; j++)
 		{
-			switch (starting_grid[i][j])
-			{
-			case 0: // if air in starting we check if its still air or "lightning"
-				if (potential_grid[i][j] != 0)
-				{
-					std::cout << "\033[36;46m" << "0" << "\033[0m"; // yellow
-				}
-				else
-				{
-					std::cout << "\033[33;43m" << "0" << "\033[0m"; // blue
-				}
-				break;
-			case 1: // ground
-				std::cout << "\033[32;42m" << "0" << "\033[0m"; // green
-				break;
-			case 2: // starting charge
-				std::cout <<  "\033[31;41m" << "0" << "\033[0m"; // red
-				break;
-			case 3: //boundary
-				std::cout << "\033[37;47m" << "0" << "\033[0m"; // white
-				break;
-			default:
-				std::cout << "\033[0m" << "0" << "\033[0m"; // default
-				break;
-			}
+			//switch (starting_grid[i][j])
+			//{
+			//case 0: // if air in starting we check if its still air or "lightning"
+			////	if (potential_grid[i][j] != 0)
+			//	{
+			//		std::cout << "\033[36;46m" << "0" << "\033[0m"; // yellow
+			//	}
+			//	else
+			//	{
+			//		std::cout << "\033[33;43m" << "0" << "\033[0m"; // blue
+			//	}
+			//	break;
+			//case 1: // ground
+			//	std::cout << "\033[32;42m" << "0" << "\033[0m"; // green
+			//	break;
+			//case 2: // starting charge
+			//	std::cout <<  "\033[31;41m" << "0" << "\033[0m"; // red
+			//	break;
+			//case 3: //boundary
+			//	std::cout << "\033[37;47m" << "0" << "\033[0m"; // white
+			//	break;
+			//default:
+			//	std::cout << "\033[0m" << "0" << "\033[0m"; // default
+			//	break;
+			//}
 
 
 	
@@ -169,10 +224,12 @@ void displayGridColour()
 
 float calculateLaplace(int x, int y)
 {
-	float left = potential_grid[y][x - 1];
-	float right = potential_grid[y][x + 1];
-	float up = potential_grid[y + 1][x];
-	float down = potential_grid[y - 1][x];
+	float left = potentials[y][x - 1];
+	float right = potentials[y][x + 1];
+	float up = potentials[y + 1][x];
+	float down = potentials[y - 1][x];
+
+
 
 	float average = left + right + up + down;
 	average /= 4;
@@ -191,16 +248,16 @@ bool calculateGridStep()
 	{
 		for (int j = 0; j < x_size; j++)
 		{
-			if (potential_grid[i][j] == 0 || potential_grid[i][j] == 1) //skip anything with 0 or 1
+			if (potentials[i][j] == 0 || potentials[i][j] == 1) //skip anything with 0 or 1
 			{
 				continue;
 			}
 
 			float new_value  = calculateLaplace(j, i);
 
-			float old_value = potential_grid[i][j];
+			float old_value = potentials[i][j];
 
-			potential_grid_updates[i][j] = new_value;
+			new_potentials[i][j] = new_value;
 
 			//add tolerance check
 			
@@ -211,7 +268,7 @@ bool calculateGridStep()
 		}
 	}
 
-	std::swap(potential_grid, potential_grid_updates);
+	std::swap(potentials, new_potentials);
 
 	return is_within_tolerance;
 }
@@ -228,7 +285,7 @@ void selectLightningCell()
 	{
 		for (int j = 0; j < x_size; j++)
 		{
-			if (potential_grid[i][j] == 0) //skip current lightning cells or boundaries
+			if (potentials[i][j] == 0) //skip current lightning cells or boundaries
 			{
 				continue;
 			}
@@ -241,12 +298,15 @@ void selectLightningCell()
 				{
 					if (i + x >= x_size || j + y >= y_size) continue;  // if checking cells that are out of bounds skip
 					if (x == 0 && y == 0) continue;// skip middle cell
-					if (starting_grid[i + x][j + y] == 3) continue; //skip boundaries
 
-					if (potential_grid[i + x][j + y] == 0) // if a surrounding cell is lightning then this is a candidate, might be picking up boundaries at the moment.
+					if (j + y < 0) continue; //temp fix
+
+					if (starting[i + x][j + y] == 3) continue; //skip boundaries 
+
+					if (potentials[i + x][j + y] == 0) // if a surrounding cell is lightning then this is a candidate, might be picking up boundaries at the moment.
 					{
 	
-						if (potential_grid[i][j] == 1) // check if candidate ground is next to lightning
+						if (potentials[i][j] == 1) // check if candidate ground is next to lightning
 						{
 							std::cout << "Candidate was ground!" << std::endl;
 							is_ground_candidate_found = true;
@@ -255,7 +315,7 @@ void selectLightningCell()
 
 						candidate_cell temp;
 
-						temp.potential = potential_grid[i][j];
+						temp.potential = potentials[i][j];
 						temp.x = j;
 						temp.y = i;
 						temp.parent_x = j + y;
@@ -320,8 +380,8 @@ void selectLightningCell()
 
 	lightning_points.push_back(lightning_cell(chosen.x, chosen.y, chosen.parent_x,chosen.parent_y));
 
-	potential_grid[chosen.y][chosen.x] = 0;
-	potential_grid_updates[chosen.y][chosen.x] = 0;
+	potentials[chosen.y][chosen.x] = 0;
+	new_potentials[chosen.y][chosen.x] = 0;
 }
 
 void resetPotentialGrid()
@@ -330,12 +390,12 @@ void resetPotentialGrid()
 	{
 		for (int j = 0; j < x_size; j++)
 		{
-			if (potential_grid[i][j] == 0 || potential_grid[i][j] == 1)
+			if (potentials[i][j] == 0 || potentials[i][j] == 1)
 			{
 				continue;
 			}
 
-			potential_grid[i][j] = 0.5;
+			potentials[i][j] = 0.5;
 		}
 		
 	}
@@ -381,7 +441,7 @@ int main()
 	regen_lightning();
 
 	const int screenWidth = 1200;
-	const int screenHeight = 900;
+	const int screenHeight = 1200;
 
 	InitWindow(screenWidth, screenHeight, "DBM Testing");
 
@@ -392,17 +452,38 @@ int main()
 
 		// check for num input, used to regen lightning and set eta
 		
-		if (IsKeyPressed(KEY_ONE)) { eta = 1; regen_lightning(); }
-		if (IsKeyPressed(KEY_TWO)){ eta = 2; regen_lightning();}
-		if (IsKeyPressed(KEY_THREE)){ eta = 3; regen_lightning();}
-		if (IsKeyPressed(KEY_FOUR)) {eta = 4; regen_lightning(); }
-		if (IsKeyPressed(KEY_FIVE)){ eta = 5; regen_lightning(); }
+		if (IsKeyPressed(KEY_ONE))  {eta = 1;}
+		if (IsKeyPressed(KEY_TWO))	{eta = 2;}
+		if (IsKeyPressed(KEY_THREE)){eta = 3;}
+		if (IsKeyPressed(KEY_FOUR)) {eta = 4;}
+		if (IsKeyPressed(KEY_FIVE)) {eta = 5;}
+
+		if (IsKeyPressed(KEY_EQUAL)) { x_size++; y_size++; }
+		if (IsKeyPressed(KEY_MINUS)) {
+			if (x_size > 5)
+			{
+				x_size--;
+				y_size--;
+			}
+		}
+
+		if (IsKeyPressed(KEY_SPACE)) { regen_lightning(); }
 
 		BeginDrawing();
 
 		ClearBackground(BLACK);
 
 		int segment_size = 50;
+
+		if (segment_size * (y_size + 10) > 1200)
+		{
+			segment_size = 1200 / (y_size + 10);
+		}
+
+
+
+
+		int font_size = segment_size / 2;
 
 		int y_offset = segment_size;
 
@@ -457,12 +538,24 @@ int main()
 
 		// info text
 
-		DrawText(TextFormat("Lightning Generation DBM Test"),0, ((y_size + 1) * segment_size) + y_offset, 40, WHITE);
+		DrawText(TextFormat("Lightning Generation DBM Test"),0, ((y_size + 1) * segment_size) + y_offset, font_size*2, WHITE);
+		DrawText(TextFormat("Press Spacebar to regenerate lightning!"), 0, ((y_size + 2) * segment_size) + y_offset, font_size * 2, WHITE);
 
-		DrawText(TextFormat("Eta: %i", eta), 0, ((y_size + 3) * segment_size) + y_offset, 20, WHITE);
 
-		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, ((y_size + 4) * segment_size) + y_offset, 20, WHITE);
 
+		DrawText(TextFormat("Eta: %i", eta), 0, ((y_size + 3.5) * segment_size) + y_offset, font_size, WHITE);
+
+		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, ((y_size + 4) * segment_size) + y_offset, font_size, WHITE);
+
+
+		DrawText(TextFormat("Grid Size: %i", x_size), 0, ((y_size + 4.55) * segment_size) + y_offset, font_size, WHITE);
+
+
+		DrawText(TextFormat("Use +/- keys to increase or decrease the grid size! (Minimum 5)"), 0, ((y_size + 5) * segment_size) + y_offset, font_size, WHITE);
+
+	
+
+		// draw lightning last so that it is on top of everything
 
 		for (int i = 0; i < lightning_points.size(); i++)
 		{
