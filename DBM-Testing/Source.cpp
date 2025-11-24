@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <random>
+#include <chrono>
 
 #include "raylib.h"
 
@@ -118,7 +119,9 @@ void createStartingGrid()
 		starting.push_back(row);
 	}
 
-	starting[0][4] = 2;
+	int starting_x = x_size / 2;
+
+	starting[0][starting_x] = 2;
 }
 
 void initialiseGrid()
@@ -308,7 +311,7 @@ void selectLightningCell()
 	
 						if (potentials[i][j] == 1) // check if candidate ground is next to lightning
 						{
-							std::cout << "Candidate was ground!" << std::endl;
+						//	std::cout << "Candidate was ground!" << std::endl;
 							is_ground_candidate_found = true;
 							reached_edge = true;
 						}
@@ -429,7 +432,7 @@ void regen_lightning()
 		performLightningStep();
 	}
 
-	displayGridColour();
+	//displayGridColour();
 
 }
 
@@ -447,6 +450,7 @@ int main()
 
 	SetTargetFPS(60);
 
+	std::chrono::microseconds duration = std::chrono::microseconds();
 	while (!WindowShouldClose())
 	{
 
@@ -467,7 +471,13 @@ int main()
 			}
 		}
 
-		if (IsKeyPressed(KEY_SPACE)) { regen_lightning(); }
+
+		if (IsKeyPressed(KEY_SPACE)) { 
+			auto time_at_start = std::chrono::high_resolution_clock::now(); 
+			regen_lightning();
+			auto time_at_end = std::chrono::high_resolution_clock::now();
+			duration = std::chrono::duration_cast<std::chrono::microseconds>(time_at_end - time_at_start);
+		}
 
 		BeginDrawing();
 
@@ -475,13 +485,10 @@ int main()
 
 		int segment_size = 50;
 
-		if (segment_size * (y_size + 10) > 1200)
+		if (segment_size * (y_size + 8) > 1200)
 		{
-			segment_size = 1200 / (y_size + 10);
+			segment_size = 1200 / (y_size + 8);
 		}
-
-
-
 
 		int font_size = segment_size / 2;
 
@@ -541,17 +548,19 @@ int main()
 		DrawText(TextFormat("Lightning Generation DBM Test"),0, ((y_size + 1) * segment_size) + y_offset, font_size*2, WHITE);
 		DrawText(TextFormat("Press Spacebar to regenerate lightning!"), 0, ((y_size + 2) * segment_size) + y_offset, font_size * 2, WHITE);
 
+		DrawText(TextFormat("Latest generation time: % i  microseconds", duration ), 0, ((y_size + 3) * segment_size) + y_offset, font_size * 2, WHITE);
 
 
-		DrawText(TextFormat("Eta: %i", eta), 0, ((y_size + 3.5) * segment_size) + y_offset, font_size, WHITE);
 
-		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, ((y_size + 4) * segment_size) + y_offset, font_size, WHITE);
+		DrawText(TextFormat("Eta: %i", eta), 0, ((y_size + 4.5) * segment_size) + y_offset, font_size, WHITE);
 
-
-		DrawText(TextFormat("Grid Size: %i", x_size), 0, ((y_size + 4.55) * segment_size) + y_offset, font_size, WHITE);
+		DrawText(TextFormat("Use number keys to switch the Eta value (1/2/3/4/5)"), 0, ((y_size + 5) * segment_size) + y_offset, font_size, WHITE);
 
 
-		DrawText(TextFormat("Use +/- keys to increase or decrease the grid size! (Minimum 5)"), 0, ((y_size + 5) * segment_size) + y_offset, font_size, WHITE);
+		DrawText(TextFormat("Grid Size: %i", x_size), 0, ((y_size + 5.5) * segment_size) + y_offset, font_size, WHITE);
+
+
+		DrawText(TextFormat("Use +/- keys to increase or decrease the grid size! (Minimum 5)"), 0, ((y_size + 6) * segment_size) + y_offset, font_size, WHITE);
 
 	
 
