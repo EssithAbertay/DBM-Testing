@@ -12,7 +12,7 @@
 int test_x = 10;
 
 const int LIGHTNING_STEPS = 10;
-const int MAX_GRADIENT_LAPLACE_LOOPS = 50;
+int MAX_GRADIENT_LAPLACE_LOOPS = 50;
 
 bool reached_edge = false;
 
@@ -129,6 +129,8 @@ void initialiseGrid()
 	lightning_points.clear();
 	potentials.clear();
 	new_potentials.clear();
+
+	MAX_GRADIENT_LAPLACE_LOOPS = std::max(x_size * 1.5 + 20, double(30));
 
 	createStartingGrid();
 
