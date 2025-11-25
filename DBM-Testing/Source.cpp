@@ -19,8 +19,6 @@ bool reached_edge = false;
 int eta = 1;
 
 //std::vector<Vector2> lightning_points;
-
-
 //float potential_grid[y_size][x_size] =
 //{
 //	0,0,0,0,0,0,0,0,0,0,
@@ -131,10 +129,11 @@ void initialiseGrid()
 	new_potentials.clear();
 
 	MAX_GRADIENT_LAPLACE_LOOPS = std::max(x_size * 1.5 + 20, double(30));
+	reached_edge = false;
+
 
 	createStartingGrid();
 
-	reached_edge = false;
 	for (int i = 0; i < y_size; i++)
 	{
 		std::vector<float> row;
@@ -145,23 +144,15 @@ void initialiseGrid()
 			{
 			case 0:
 				row.push_back(0.5);
-				//potential_grid[i][j] = 0.5;
-			//	potential_grid_updates[i][j] = 0.5;
 				break;
 			case 1:
 				row.push_back(1);
-			////	potential_grid[i][j] = 1;
-			//	potential_grid_updates[i][j] = 1;
 				break;
 			case 2:
 				row.push_back(0);
-			//	potential_grid[i][j] = 0;
-			//	potential_grid_updates[i][j] = 0;
 				break;
 			case 3:
 				row.push_back(0);
-			//	potential_grid[i][j] = 0;
-			//	potential_grid_updates[i][j] = 0;
 				break;
 			default:
 				break;
@@ -234,11 +225,8 @@ float calculateLaplace(int x, int y)
 	float up = potentials[y + 1][x];
 	float down = potentials[y - 1][x];
 
-
-
 	float average = left + right + up + down;
 	average /= 4;
-
 
 	return average;
 }
@@ -263,8 +251,6 @@ bool calculateGridStep()
 			float old_value = potentials[i][j];
 
 			new_potentials[i][j] = new_value;
-
-			//add tolerance check
 			
 			if (abs(old_value - new_value) >= tolerance)
 			{
@@ -308,7 +294,7 @@ void selectLightningCell()
 
 					if (starting[i + x][j + y] == 3) continue; //skip boundaries 
 
-					if (potentials[i + x][j + y] == 0) // if a surrounding cell is lightning then this is a candidate, might be picking up boundaries at the moment.
+					if (potentials[i + x][j + y] == 0) // if a surrounding cell is lightning then this is a candidate
 					{
 	
 						if (potentials[i][j] == 1) // check if candidate ground is next to lightning
@@ -326,7 +312,7 @@ void selectLightningCell()
 						temp.parent_x = j + y;
 						temp.parent_y = i + x;
 
-						if (is_ground_candidate_found) // TODO: FINISH GRABBING GROUND!!!
+						if (is_ground_candidate_found) 
 						{
 							candidates.clear();
 							candidates.push_back(temp);
@@ -335,7 +321,7 @@ void selectLightningCell()
 
 						candidates.push_back(temp);
 
-						x = 2; y = 2; // skip out the check cause we knw it's a candidate, this feels evil
+						x = 2; y = 2; // skip out the check cause we knw it's a candidate
 					}
 				}
 
@@ -357,14 +343,9 @@ void selectLightningCell()
 	for (auto & x : candidates)
 	{
 		x.probability = (pow(x.potential,eta)) / total_potential;
-
-		//std::cout << "Probability: " << x.probability << " | Potential: " << x.potential << " | X: " << x.x << " | Y: " << x.y << std::endl;
 	}
 
 	// taken from cpp reference  https://en.cppreference.com/w/cpp/numeric/random/generate_canonical.html
-	  
-	// baddddd
-
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	float rnd = std::generate_canonical<float, 10>(gen);
@@ -381,7 +362,6 @@ void selectLightningCell()
 	}
 
 	candidate_cell chosen = candidates[chosen_candidate];
-
 
 	lightning_points.push_back(lightning_cell(chosen.x, chosen.y, chosen.parent_x,chosen.parent_y));
 
@@ -410,15 +390,22 @@ void performLightningStep()
 {
 	bool is_within_tolerance = true;
 
+	int loops = 0;
+
 	while(is_within_tolerance)
 	{
 		is_within_tolerance = calculateGridStep();
+		loops++;
+
+		if (loops >= MAX_GRADIENT_LAPLACE_LOOPS)
+		{
+			is_within_tolerance = false;
+		}
 	}
 
     selectLightningCell();
 	resetPotentialGrid();
 }
-
 
 void regen_lightning()
 {
