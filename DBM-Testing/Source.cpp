@@ -483,7 +483,6 @@ void regen_lightning()
 
 void render_scene(Camera3D & camera)
 {
-	BeginDrawing();
 
 	ClearBackground(BLACK);
 
@@ -499,7 +498,6 @@ void render_scene(Camera3D & camera)
 	Vector3 centre = { float(x_size * segment_size / 2), float(y_size * segment_size / 2),  float(z_size * segment_size / 2) };
 
 	camera.target = centre;      // Camera looking at point
-
 
 
 	UpdateCamera(&camera, CAMERA_ORBITAL);
@@ -662,33 +660,9 @@ void render_scene(Camera3D & camera)
 	//	
 	//}
 
-	rlImGuiBegin();
-	ImGui::Begin("DBM Test", NULL);
-	ImGui::Text("Display");
-	ImGui::Checkbox("Cube Display", &enable_cubes);
-
-	ImGui::Text("Controls");
 
 
-	ImGui::SliderInt("Size", &size, 5, 10);
 
-	x_size = size;
-	y_size = size;
-	z_size = size;
-	//ImGui::SliderInt("X Size", &x_size, 5,10);
-	//ImGui::SliderInt("Y Size", &y_size, 5, 10);
-	//ImGui::SliderInt("Z Size", &z_size, 5, 10);
-	ImGui::SliderInt("Eta", &eta, 1, 10);
-
-	if (ImGui::Button("Regenerate Lightning", { 300,50 }))
-	{
-		regen_lightning();
-	}
-
-	ImGui::End();
-	rlImGuiEnd();
-
-	EndDrawing();
 }
 
 int main()
@@ -710,14 +684,26 @@ int main()
 
 	// Define the camera to look into our 3d world
 	Camera3D camera = { 0 };
+
 	camera.position = Vector3({ 20.0f, 20.0f, 20.0f });  // Camera position
 	camera.target = Vector3({ 0.0f, 0.0f, 0.0f });      // Camera looking at point
 	camera.up = Vector3({ 0.0f, 1.0f, 0.0f });          // Camera up vector (rotation towards target)
 	camera.fovy = 45.0f;                                // Camera field-of-view Y
 	camera.projection = CAMERA_ORTHOGRAPHIC;             // Camera mode type
 
-	
+	Camera3D camera2 = camera;
+
 	rlImGuiSetup(false);
+
+
+	// Define a render texture to render
+	int renderTextureWidth = 300;
+	int renderTextureHeight = 300;
+	RenderTexture2D target = LoadRenderTexture(renderTextureWidth, renderTextureHeight);
+
+	int num_of_points = 0;
+	float point_cd = 0; 
+
 
 	while (!WindowShouldClose())
 	{
@@ -727,6 +713,9 @@ int main()
 			regen_lightning();
 			Vector3 position = { float(x_size * segment_size), (y_size + 1) * segment_size / 2,  -float(z_size * segment_size) };
 			camera.position = position;      // Camera looking at point
+
+			num_of_points = 0;
+			camera2.position = position;
 
 			prev_x = x_size;
 			prev_y = y_size;
@@ -776,7 +765,85 @@ int main()
 		//	duration = std::chrono::duration_cast<std::chrono::microseconds>(time_at_end - time_at_start);
 		//}
 		
+		{
+			BeginTextureMode(target);
+			ClearBackground(BLACK);
+
+			Vector3 centre = { float(x_size * segment_size / 2), float(y_size * segment_size / 2),  float(z_size * segment_size / 2) };
+			camera2.target = centre;
+
+
+			BeginMode3D(camera2);
+			int y_offset = segment_size;
+
+			float y_start = segment_size * (y_size - 1.5);
+
+			for (int i = 0; i < num_of_points; i++)
+			{
+				Vector3 start_pos = { lightning_points[i].parent_x * segment_size, y_start - (lightning_points[i].parent_y * segment_size) + y_offset, lightning_points[i].parent_z * segment_size };
+				Vector3 end_pos = { lightning_points[i].x * segment_size, y_start - (lightning_points[i].y * segment_size) + y_offset, lightning_points[i].z * segment_size };
+
+				DrawLine3D(end_pos, start_pos, YELLOW);
+			}
+			EndMode3D();
+			EndTextureMode();
+
+			point_cd += GetFrameTime();
+
+			if (point_cd > 0.1)
+			{
+				num_of_points++;
+				point_cd = 0;
+			}
+
+			if (num_of_points == lightning_points.size())
+			{
+				num_of_points = 0;
+			}
+		}
+
+
+
+		BeginDrawing();
 		render_scene(camera);
+
+
+		
+		rlImGuiBegin();
+
+			ImGui::Begin("Alt View", NULL);
+				rlImGuiImageRenderTexture(&target);
+			ImGui::End();
+
+
+
+			ImGui::Begin("DBM Test", NULL);
+			ImGui::Text("Display");
+			ImGui::Checkbox("Cube Display", &enable_cubes);
+
+			ImGui::Text("Controls");
+
+
+			ImGui::SliderInt("Size", &size, 5, 10);
+
+			x_size = size;
+			y_size = size;
+			z_size = size;
+			//ImGui::SliderInt("X Size", &x_size, 5,10);
+			//ImGui::SliderInt("Y Size", &y_size, 5, 10);
+			//ImGui::SliderInt("Z Size", &z_size, 5, 10);
+			ImGui::SliderInt("Eta", &eta, 1, 10);
+
+			if (ImGui::Button("Regenerate Lightning", { 300,50 }))
+			{
+				regen_lightning();
+				num_of_points = 0;
+			}
+
+			ImGui::End();
+		rlImGuiEnd();
+
+		EndDrawing();
 	}
 
 	
