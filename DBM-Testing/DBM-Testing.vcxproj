@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\Ari_A\Documents\Honours\Artefacts\DBM-Testing\DBM-Testing\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -118,6 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\Ari_A\Documents\Honours\Artefacts\DBM-Testing\DBM-Testing\dependencies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,10 +129,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="imgui.cpp" />
+    <ClCompile Include="imgui_demo.cpp" />
+    <ClCompile Include="imgui_draw.cpp" />
+    <ClCompile Include="imgui_tables.cpp" />
+    <ClCompile Include="imgui_widgets.cpp" />
+    <ClCompile Include="rlImGui.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dependencies\include\extras\FA6FreeSolidFontData.h" />
+    <ClInclude Include="dependencies\include\extras\IconsFontAwesome6.h" />
+    <ClInclude Include="dependencies\include\imconfig.h" />
+    <ClInclude Include="dependencies\include\imgui.h" />
+    <ClInclude Include="dependencies\include\imgui_impl_raylib.h" />
+    <ClInclude Include="dependencies\include\imgui_internal.h" />
+    <ClInclude Include="dependencies\include\imstb_rectpack.h" />
+    <ClInclude Include="dependencies\include\imstb_textedit.h" />
+    <ClInclude Include="dependencies\include\imstb_truetype.h" />
+    <ClInclude Include="dependencies\include\rlImGui.h" />
+    <ClInclude Include="dependencies\include\rlImGuiColors.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

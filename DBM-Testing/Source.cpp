@@ -6,9 +6,18 @@
 
 #include "raylib.h"
 
- int x_size = 5;
- int y_size = 5;
- int z_size = 5;
+#include "imgui.h"
+#include "rlImGui.h"
+
+int size = 5;
+
+int x_size = 5;
+int y_size = 5;
+int z_size = 5;
+
+int prev_x = x_size;
+int prev_y = y_size;
+int prev_z = z_size;
 
 int test_x = 10;
 
@@ -539,7 +548,7 @@ void render_scene(Camera3D & camera)
 						z * spacing
 					};
 
-					if (starting[z][y][z] != 0)
+					if (starting[z][y][x] != 0)
 					{
 						DrawCubeWires(cubePosition, segment_size, segment_size, segment_size, cubeColour);
 					}
@@ -653,6 +662,31 @@ void render_scene(Camera3D & camera)
 	//	
 	//}
 
+	rlImGuiBegin();
+	ImGui::Begin("DBM Test", NULL);
+	ImGui::Text("Display");
+	ImGui::Checkbox("Cube Display", &enable_cubes);
+
+	ImGui::Text("Controls");
+
+
+	ImGui::SliderInt("Size", &size, 5, 10);
+
+	x_size = size;
+	y_size = size;
+	z_size = size;
+	//ImGui::SliderInt("X Size", &x_size, 5,10);
+	//ImGui::SliderInt("Y Size", &y_size, 5, 10);
+	//ImGui::SliderInt("Z Size", &z_size, 5, 10);
+	ImGui::SliderInt("Eta", &eta, 1, 10);
+
+	if (ImGui::Button("Regenerate Lightning", { 300,50 }))
+	{
+		regen_lightning();
+	}
+
+	ImGui::End();
+	rlImGuiEnd();
 
 	EndDrawing();
 }
@@ -683,50 +717,64 @@ int main()
 	camera.projection = CAMERA_ORTHOGRAPHIC;             // Camera mode type
 
 	
+	rlImGuiSetup(false);
+
 	while (!WindowShouldClose())
 	{
 
-		//// check for num input, used to regen lightning and set eta
-		//
-		if (IsKeyPressed(KEY_ONE))  {eta = 1;}
-		if (IsKeyPressed(KEY_TWO))	{eta = 2;}
-		if (IsKeyPressed(KEY_THREE)){eta = 3;}
-		if (IsKeyPressed(KEY_FOUR)) {eta = 4;}
-		if (IsKeyPressed(KEY_FIVE)) {eta = 5;}
-
-		if (IsKeyPressed(KEY_EQUAL)) {
-			x_size++; 
-			y_size++; 
-			z_size++; 
-			regen_lightning();
-			Vector3 position = { float(x_size * segment_size), (y_size + 1) * segment_size /2,  -float(z_size * segment_size) };
-			camera.position = position;      // Camera looking at point
-
-		}
-
-		if (IsKeyPressed(KEY_MINUS)) {
-			if (x_size > 5)
-			{
-				x_size--;
-				y_size--;
-				z_size--;
-			}
+		if (prev_x != x_size || prev_y != y_size || prev_z != z_size)
+		{
 			regen_lightning();
 			Vector3 position = { float(x_size * segment_size), (y_size + 1) * segment_size / 2,  -float(z_size * segment_size) };
 			camera.position = position;      // Camera looking at point
 
+			prev_x = x_size;
+			prev_y = y_size;
+			prev_z = z_size;
 		}
 
+		// keyboard input now irrelevant due to imgui
+		//// check for num input, used to regen lightning and set eta
+		//
+		//if (IsKeyPressed(KEY_ONE))  {eta = 1;}
+		//if (IsKeyPressed(KEY_TWO))	{eta = 2;}
+		//if (IsKeyPressed(KEY_THREE)){eta = 3;}
+		//if (IsKeyPressed(KEY_FOUR)) {eta = 4;}
+		//if (IsKeyPressed(KEY_FIVE)) {eta = 5;}
 
-		if (IsKeyPressed(KEY_C)) { enable_cubes = !enable_cubes; }
+		//if (IsKeyPressed(KEY_EQUAL)) {
+		//	x_size++; 
+		//	y_size++; 
+		//	z_size++; 
+		//	regen_lightning();
+		//	Vector3 position = { float(x_size * segment_size), (y_size + 1) * segment_size /2,  -float(z_size * segment_size) };
+		//	camera.position = position;      // Camera looking at point
+
+		//}
+
+		//if (IsKeyPressed(KEY_MINUS)) {
+		//	if (x_size > 5)
+		//	{
+		//		x_size--;
+		//		y_size--;
+		//		z_size--;
+		//	}
+		//	regen_lightning();
+		//	Vector3 position = { float(x_size * segment_size), (y_size + 1) * segment_size / 2,  -float(z_size * segment_size) };
+		//	camera.position = position;      // Camera looking at point
+
+		//}
 
 
-		if (IsKeyPressed(KEY_SPACE)) { 
-			auto time_at_start = std::chrono::high_resolution_clock::now(); 
-			regen_lightning();
-			auto time_at_end = std::chrono::high_resolution_clock::now();
-			duration = std::chrono::duration_cast<std::chrono::microseconds>(time_at_end - time_at_start);
-		}
+		//if (IsKeyPressed(KEY_C)) { enable_cubes = !enable_cubes; }
+
+
+		//if (IsKeyPressed(KEY_SPACE)) { 
+		//	auto time_at_start = std::chrono::high_resolution_clock::now(); 
+		//	regen_lightning();
+		//	auto time_at_end = std::chrono::high_resolution_clock::now();
+		//	duration = std::chrono::duration_cast<std::chrono::microseconds>(time_at_end - time_at_start);
+		//}
 		
 		render_scene(camera);
 	}
