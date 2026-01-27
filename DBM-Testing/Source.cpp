@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include <string>
 
 #include "raylib.h"
 
@@ -331,7 +332,6 @@ void checkCandidacy(int x_pos, int y_pos,int z_pos)
 
 					if (starting[z_pos + z][y_pos + y][x_pos + x] == 1) // check if candidate ground is next to lightning
 					{
-						std::cout << "Candidate was ground!" << std::endl;
 						is_ground_candidate_found = true;
 						reached_edge = true;
 					}
@@ -815,6 +815,13 @@ int main()
 				rlImGuiImageRenderTexture(&target);
 			ImGui::End();
 
+			ImGui::Begin("Point Coords", NULL);
+			for (int i = 0; i < lightning_points.size(); i++)
+			{
+				std::string displaying = "X: " + std::to_string(lightning_points[i].x) + " Y: " + std::to_string(lightning_points[i].y) + " Z: " + std::to_string(lightning_points[i].z);
+				ImGui::Text(displaying.c_str());
+			}
+			ImGui::End();
 
 
 			ImGui::Begin("DBM Test", NULL);
@@ -841,6 +848,9 @@ int main()
 			}
 
 			ImGui::End();
+
+
+
 		rlImGuiEnd();
 
 		EndDrawing();
